@@ -17,6 +17,33 @@
     
     
     <entry>
+      <title>4.17</title>
+      <link href="/2020/04/17/text1/"/>
+      <url>/2020/04/17/text1/</url>
+      
+        <content type="html"><![CDATA[<h2 id="关于刚考完的期中考试"><a href="#关于刚考完的期中考试" class="headerlink" title="关于刚考完的期中考试"></a>关于刚考完的期中考试</h2><p>其实整体还行，没有特别多不会的，不过最近也是真的忙，了却心中一桩事也、<br>很开心啦。</p><h2 id="关于志愿者"><a href="#关于志愿者" class="headerlink" title="关于志愿者"></a>关于志愿者</h2><p>今天是周六，今天下午要去参加一个可能通知注意类型的小会，然后内容就是<br>有关我们下周三到下周日的杭州青少年网球比赛的志愿者安排的事情，我有幸<br>是11组球童的队长，参加了球童志愿，然后就是住酒店住四五天，会是什么样<br>的呢？蛮期待的。</p><h2 id="关于接下来想要做的事情"><a href="#关于接下来想要做的事情" class="headerlink" title="关于接下来想要做的事情"></a>关于接下来想要做的事情</h2><h3 id="关于文化课"><a href="#关于文化课" class="headerlink" title="关于文化课"></a>关于文化课</h3><p>昨晚，缝缝补补，把数据结构的第一章报告是勉强写完了，数电依然是什么也<br>不会，emmm，反正可能数电要摆烂了，无所谓了。还有就是思政课的一个实践<br>作业，感觉这个东西是个问题。。。要找个时间做一下了。</p><h3 id="关于自己想学的"><a href="#关于自己想学的" class="headerlink" title="关于自己想学的"></a>关于自己想学的</h3><p>大致有：爬虫以及python语言的其他模块的学习(py确实蛮好用)，web的学习<br>(w3school)要看一看，数模的学习，好歹也是被别人邀请的，按时整理整理博<br>客吧，(ctf完全不会呀啊啊啊)</p><h2 id="希望有一天我也能成为一个厉害的人！"><a href="#希望有一天我也能成为一个厉害的人！" class="headerlink" title="希望有一天我也能成为一个厉害的人！"></a>希望有一天我也能成为一个厉害的人！</h2>]]></content>
+      
+      
+      <categories>
+          
+          <category> Markdown </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> Typora </tag>
+            
+            <tag> Markdown </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
       <title>桃桃也要和你打招呼</title>
       <link href="/2020/02/09/text2/"/>
       <url>/2020/02/09/text2/</url>
@@ -38,33 +65,6 @@
             <tag> Markdown </tag>
             
             <tag> 桃桃 </tag>
-            
-        </tags>
-      
-    </entry>
-    
-    
-    
-    <entry>
-      <title>来打个招呼吧</title>
-      <link href="/2020/02/08/text1/"/>
-      <url>/2020/02/08/text1/</url>
-      
-        <content type="html"><![CDATA[<h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><pre class=" language-bash"><code class="language-bash">$ hexo new <span class="token string">"My New Post"</span></code></pre><p>More info: <a href="https://hexo.io/docs/writing.html">Writing</a></p><h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><pre class=" language-bash"><code class="language-bash">$ hexo server</code></pre>]]></content>
-      
-      
-      <categories>
-          
-          <category> Markdown </category>
-          
-      </categories>
-      
-      
-        <tags>
-            
-            <tag> Typora </tag>
-            
-            <tag> Markdown </tag>
             
         </tags>
       
