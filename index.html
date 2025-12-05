@@ -416,13 +416,13 @@
                 </a>
 
                 
-                    <a href="https://github.com/blinkfox/hexo-theme-matery" class="waves-effect waves-light btn" target="_blank">
+                    <a href="https://github.com/7honey" class="waves-effect waves-light btn" target="_blank">
                         <i class="fab fa-github-alt"></i>Github
                     </a>
                 
             </div>
             <div class="cover-social-link">
-    <a href="https://github.com/blinkfox" class="tooltipped" target="_blank" data-tooltip="访问我的GitHub" data-position="top" data-delay="50">
+    <a href="https://github.com/7honey" class="tooltipped" target="_blank" data-tooltip="访问我的GitHub" data-position="top" data-delay="50">
         <i class="fab fa-github"></i>
     </a>
 
@@ -432,21 +432,9 @@
         <i class="fas fa-envelope-open"></i>
     </a>
 
-
-
-
-
-
-
     <a href="tencent://AddContact/?fromId=50&fromSubId=1&subcmd=all&uin=2953181583" class="tooltipped" target="_blank" data-tooltip="QQ联系我: 2953181583" data-position="top" data-delay="50">
         <i class="fab fa-qq"></i>
     </a>
-
-
-
-
-
-
 
     <a href="/atom.xml" class="tooltipped" target="_blank" data-tooltip="RSS 订阅" data-position="top" data-delay="50">
         <i class="fas fa-rss"></i>
@@ -519,7 +507,7 @@
         let autoCarousel = function () {
             carouselIntervalId = setInterval(function () {
                 coverSlider.carousel('next');
-            }, 5000);
+            }, 50000);
         };
         autoCarousel();
         
@@ -759,14 +747,14 @@
         <meting-js class="col l8 offset-l2 m10 offset-m1 s12"
                    server="netease"
                    type="playlist"
-                   id="7282469847"
+                   id="17518234764"
                    fixed='true'
                    autoplay='true'
                    theme='#42b983'
                    loop='all'
                    order='random'
                    preload='auto'
-                   volume='0.7'
+                   volume='0.3'
                    list-folded='true'
         >
         </meting-js>
@@ -969,16 +957,14 @@ $(function () {
     <script src="/js/matery.js"></script>
 
     
-
-    
         
-        <script type="text/javascript">
-            // 只在桌面版网页启用特效
-            var windowWidth = $(window).width();
-            if (windowWidth > 768) {
-                document.write('<script type="text/javascript" src="/libs/others/sakura.js"><\/script>');
-            }
-        </script>
+	<script type="text/javascript">
+		// 只在桌面版网页启用特效
+		var windowWidth = $(window).width();
+		if (windowWidth > 768) {
+			document.write('<script type="text/javascript" src="/libs/others/sakura.js"><\/script>');
+		}
+	</script>
     
 
     <!-- 雪花特效 -->
@@ -988,36 +974,26 @@ $(function () {
     
 
      
-        <script src="https://ssl.captcha.qq.com/TCaptcha.js"></script>
-        <script src="/libs/others/TencentCaptcha.js"></script>
-        <button id="TencentCaptcha" data-appid="xxxxxxxxxx" data-cbfn="callback" type="button" hidden></button>
+	<script src="https://ssl.captcha.qq.com/TCaptcha.js"></script>
+	<script src="/libs/others/TencentCaptcha.js"></script>
+	<button id="TencentCaptcha" data-appid="xxxxxxxxxx" data-cbfn="callback" type="button" hidden></button>
     
 
-    <!-- Baidu Analytics -->
+	<script>
+		(function () {
+			var bp = document.createElement('script');
+			var curProtocol = window.location.protocol.split(':')[0];
+			if (curProtocol === 'https') {
+				bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';
+			} else {
+				bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+			}
+			var s = document.getElementsByTagName("script")[0];
+			s.parentNode.insertBefore(bp, s);
+		})();
+	</script>
 
-    <!-- Baidu Push -->
-
-<script>
-    (function () {
-        var bp = document.createElement('script');
-        var curProtocol = window.location.protocol.split(':')[0];
-        if (curProtocol === 'https') {
-            bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';
-        } else {
-            bp.src = 'http://push.zhanzhang.baidu.com/push.js';
-        }
-        var s = document.getElementsByTagName("script")[0];
-        s.parentNode.insertBefore(bp, s);
-    })();
-</script>
-
-    
     <script src="/libs/others/clicklove.js" async="async"></script>
-    
-    
-
-    
-
     
     <script>
         (function (i, s, o, g, r, a, m) {
@@ -1047,13 +1023,7 @@ $(function () {
         zIndex="-1" count="99"
         src="/libs/background/canvas-nest.js"></script>
     
-
-    
-
-    
     <script type="text/javascript" src="/libs/background/ribbon-dynamic.js" async="async"></script>
-    
-
     
     <script src="/libs/instantpage/instantpage.js" type="module"></script>
     
