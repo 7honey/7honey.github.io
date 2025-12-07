@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>滢滢宝宝圣诞快乐~</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #080808; /* 接近纯黑的深色背景 */
+            font-family: 'Arial', sans-serif;
+        }
+
+        canvas {
+            display: block;
+        }
+
+        #loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #FFD700;
+            font-size: 22px;
+            letter-spacing: 3px;
+            pointer-events: none;
+            text-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+            transition: opacity 0.8s;
+        }
+
+        .text-overlay {
+            position: absolute;
+            bottom: 25px;
+            width: 100%;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.4);
+            pointer-events: none;
+            font-size: 15px;
+            letter-spacing: 1px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="loading">为了成功，这是必要的等待...</div>
+    <div class="text-overlay">Happy Christmas</div>
+    <canvas id="treeCanvas"></canvas>
+
+<script>
+    // ================= 配置区域 =================
+    const imgUrls = [
+        'https://picsum.photos/id/1015/200/200', 'https://picsum.photos/id/1016/200/200',
+        'https://picsum.photos/id/1018/200/200', 'https://picsum.photos/id/1020/200/200',
+        'https://picsum.photos/id/1024/200/200', 'https://picsum.photos/id/1025/200/200',
+        'https://picsum.photos/id/237/200/200',  'https://picsum.photos/id/1040/200/200' 
+    ];
+
+    // ================= 核心参数 =================
+    const TREE_HEIGHT = 850;  // 增加高度
+    const TREE_WIDTH = 340;   // 增加宽度
+    const TRUNK_HEIGHT = 120;
+    const TRUNK_WIDTH = 45;
+    
+    const LEAF_COUNT = 1700;    // 增加叶子密度
+    const TRUNK_COUNT = 250;
+    const HANGING_STAR_COUNT = 100; // 悬挂星星数量
+
+    // 透视参数 (关键：让树看起来更大更近)
+    const PERSPECTIVE = 1100; 
+    const Z_OFFSET = 250; // 较小的值会让树离镜头更近
+
+    // ================= 全局变量 =================
+    const canvas = document.getElementById('treeCanvas');
+    const ctx = canvas.getContext('2d');
+    let width, height;
+    let particles = []; 
+    let snow = [];
+    let loadedImages = [];
+    let mouseX = 0;
+    let targetRotation = 0;
+    let autoRotationSpeed = 0.0025;
+
+    // ================= 基础工具函数 =================
+    function resize() {
+        width = window.innerWidth;
+        height = window.innerHeight;
+        canvas.width = width;
+        canvas.height = height;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    window.addEventListener('mousemove', (e) => {
+        mouseX = (e.clientX - width / 2) * 0.0006;
+    });
+
+    function preloadImages(urls, callback) {
+        let loadedCounter = 0;
+        if (urls.length === 0) { callback([]); return; }
+        urls.forEach(url => {
+            const img = new Image();
+            img.crossOrigin = "Anonymous";
+            img.onload = img.onerror = () => {
+                loadedCounter++;
+                if (loadedCounter === urls.length) callback(loadedImages);
+            };
+            img.src = url;
+            loadedImages.push(img);
+        });
+    }
+
+    // ================= 3D 类定义 =================
+
+    // 基础 3D 点类，提供投影功能
+    class Point3D {
+        constructor(x, y, z) {
+            this.baseX = x; this.baseY = y; this.baseZ = z;
+            this.x = x; this.y = y; this.z = z;
+            this.scale = 0; this.screenX = 0; this.screenY = 0;
+        }
+
+        // 核心投影方法：将 3D 坐标转换为 2D 屏幕坐标
+        project(x, y, z, rotation) {
+            const cos = Math.cos(rotation);
+            const sin = Math.sin(rotation);
+            const rx = x * cos - z * sin;
+            const rz = x * sin + z * cos;
+            const scale = PERSPECTIVE / (PERSPECTIVE + rz + Z_OFFSET);
+            return {
+                sx: width / 2 + rx * scale,
+                sy: height / 2 + y * scale,
+                scale: scale,
+                rz: rz
+            };
+        }
+
+        update(rotation) {
+            const p = this.project(this.baseX, this.y, this.baseZ, rotation);
+            this.screenX = p.sx;
+            this.screenY = p.sy;
+            this.scale = p.scale;
+            this.z = p.rz; // 用于深度排序
+        }
+    }
+
+    // 普通粒子 (叶子/树干) - 增加了位置和大小的混沌感
+    class Particle extends Point3D {
+        constructor(x, y, z, type) {
+            // 引入受控的位置混沌
+            const chaosLevel = type === 'leaf' ? 98 : 5;
+            const offsetX = (Math.random() - 0.5) * chaosLevel;
+            const offsetY = (Math.random() - 0.5) * chaosLevel * 0.8;
+            const offsetZ = (Math.random() - 0.5) * chaosLevel;
+
+            super(x + offsetX, y + offsetY, z + offsetZ);
+            this.type = type;
+            
+            // 大小混沌感增强
+            this.sizeBase = type === 'leaf' ? (Math.random() * 3.5 + 1) : (Math.random() * 4 + 1.5);
+            this.twinkleOffset = Math.random() * 100;
+            
+            if (type === 'trunk') {
+                this.color = `rgba(${60+Math.random()*30}, ${40+Math.random()*20}, 20,`; 
+            } else {
+                 // 更丰富的绿色层次
+                 const shade = Math.random();
+                 let r, g, b;
+                 if (shade > 0.95) { r=220; g=220; b=150; } // 偶尔的嫩黄绿色
+                 else if (shade > 0.85) { r=30; g=180; b=60; } // 亮绿
+                 else { r=20; g=Math.floor(Math.random()*100+80); b=30; } // 深绿
+                this.color = `rgba(${r}, ${g}, ${b},`; 
+            }
+        }
+
+        draw(ctx) {
+            if (this.scale <= 0) return;
+            // 闪烁效果
+            const alpha = this.type === 'leaf' 
+                ? 0.5 + 0.5 * Math.sin(Date.now() * 0.003 + this.twinkleOffset)
+                : 0.9;
+            
+            ctx.fillStyle = this.color + alpha + ')';
+            ctx.beginPath();
+            ctx.arc(this.screenX, this.screenY, this.sizeBase * this.scale, 0, Math.PI * 2);
+            ctx.fill();
+        }
+    }
+
+    // 悬挂摆动的星星粒子 (重点改进)
+    class HangingStar extends Point3D {
+        constructor(anchorX, anchorY, anchorZ) {
+            super(anchorX, anchorY, anchorZ); // 初始位置在锚点
+            this.anchorBaseX = anchorX;
+            this.anchorBaseY = anchorY;
+            this.anchorBaseZ = anchorZ;
+            this.anchorScreen = {x:0, y:0}; // 存储锚点的屏幕坐标用于画线
+
+            this.stringLength = Math.random() * 40 + 40; // 绳子长度 20-60
+            this.starSize = Math.random() * 5 + 4;
+            
+            // 摆动物理参数
+            this.swingSpeed = Math.random() * 0.002 + 0.001;
+            this.swingPhase = Math.random() * Math.PI * 2;
+            this.maxSwingAngle = Math.random() * 0.5 + 0.1; // 最大摆动角度弧度
+            this.hue = Math.random() > 0.7 ? 50 : (Math.random() > 0.5 ? 200 : 330); // 金色、蓝色或粉色
+        }
+
+        // 重写 update 方法以包含物理摆动计算
+        update(rotation, time) {
+            // 1. 计算锚点的投影坐标 (用于画线的起点)
+            const projAnchor = this.project(this.anchorBaseX, this.anchorBaseY, this.anchorBaseZ, rotation);
+            this.anchorScreen = { x: projAnchor.sx, y: projAnchor.sy };
+
+            // 2. 计算物理摆动 (简化的单摆：在局部坐标系下计算偏移)
+            // 当前摆动角度，随时间变化
+            const currentAngle = Math.sin(time * this.swingSpeed + this.swingPhase) * this.maxSwingAngle;
+            
+            // 根据角度计算星星相对于锚点的局部偏移量 (假设沿局部X轴摆动，Y轴向下)
+            const localOffsetX = Math.sin(currentAngle) * this.stringLength;
+            const localOffsetY = Math.cos(currentAngle) * this.stringLength;
+
+            // 更新星星在世界空间中的“基础”位置 (在旋转之前)
+            this.baseX = this.anchorBaseX + localOffsetX;
+            this.y = this.anchorBaseY + localOffsetY; // Y 坐标是绝对的，向下增加
+            this.baseZ = this.anchorBaseZ; // 简化：Z方向暂不摆动
+
+            // 3. 调用父类方法投影星星本身的位置
+            super.update(rotation);
+        }
+
+        draw(ctx, time) {
+            if (this.scale <= 0) return;
+            const s = this.starSize * this.scale;
+
+            // --- 绘制细绳 ---
+            ctx.beginPath();
+            ctx.moveTo(this.anchorScreen.x, this.anchorScreen.y);
+            ctx.lineTo(this.screenX, this.screenY);
+            // 绳子颜色随星星颜色变化，但更细更淡
+            ctx.strokeStyle = `hsla(${this.hue}, 50%, 70%, ${0.3 * this.scale})`;
+            ctx.lineWidth = 0.8 * this.scale;
+            ctx.stroke();
+
+            // --- 绘制星星 ---
+            ctx.save();
+            ctx.translate(this.screenX, this.screenY);
+            // 星星自转
+            ctx.rotate(time * 0.0005 + this.swingPhase);
+
+            ctx.beginPath();
+            for (let i = 0; i < 5; i++) {
+                ctx.lineTo(Math.cos((18 + i * 72) * 0.01745) * s, 
+                           -Math.sin((18 + i * 72) * 0.01745) * s);
+                ctx.lineTo(Math.cos((54 + i * 72) * 0.01745) * (s * 0.5), 
+                           -Math.sin((54 + i * 72) * 0.01745) * (s * 0.5));
+            }
+            ctx.closePath();
+            
+            const twinkle = 0.7 + 0.3 * Math.sin(time * this.swingSpeed * 3);
+            ctx.fillStyle = `hsla(${this.hue}, 100%, 75%, ${twinkle})`;
+            // 给星星加一点光晕
+            ctx.shadowBlur = 8 * this.scale;
+            ctx.shadowColor = `hsla(${this.hue}, 100%, 50%, 0.8)`;
+            ctx.fill();
+            ctx.restore();
+        }
+    }
+
+    class PhotoOrnament extends Point3D {
+        constructor(img, x, y, z) {
+            super(x, y, z);
+            this.img = img;
+            this.size = 30;
+        }
+        draw(ctx) {
+            if (this.scale <= 0) return;
+            const s = this.size * this.scale;
+            ctx.save();
+            ctx.translate(this.screenX, this.screenY);
+            // 简单的挂环
+            ctx.beginPath(); ctx.moveTo(0,-s); ctx.lineTo(0,-s-5*this.scale); 
+            ctx.strokeStyle="#A87F32"; ctx.lineWidth=2*this.scale; ctx.stroke();
+            // 金色边框圆球
+            ctx.beginPath(); ctx.arc(0, 0, s + 2*this.scale, 0, Math.PI * 2);
+            ctx.fillStyle = '#CFB53B'; ctx.fill();
+            // 照片
+            ctx.beginPath(); ctx.arc(0, 0, s, 0, Math.PI * 2); ctx.clip();
+            ctx.drawImage(this.img, -s, -s, s * 2, s * 2);
+            ctx.restore();
+        }
+    }
+
+    // 背景雪花 (保持简单)
+    class Snow {
+        constructor() { this.reset(); this.y = Math.random() * height; }
+        reset() {
+            this.x = Math.random() * width; this.y = -10;
+            this.z = Math.random() * 800; // 深度
+            this.speed = Math.random() * 1.5 + 0.5;
+            this.size = Math.random() * 2 + 0.5;
+        }
+        update() { this.y += this.speed; if (this.y > height) this.reset(); }
+        draw(ctx) {
+            const scale = PERSPECTIVE / (PERSPECTIVE + this.z);
+            ctx.fillStyle = `rgba(255,255,255,${0.4*scale})`;
+            ctx.beginPath(); ctx.arc(this.x, this.y, this.size*scale, 0, Math.PI * 2); ctx.fill();
+        }
+    }
+
+    // ================= 初始化与动画主循环 =================
+
+    function initScene() {
+        const startY = -TREE_HEIGHT / 2;
+        
+        // 1. 构建树叶 (正三角锥 + 混沌分布)
+        for (let i = 0; i < LEAF_COUNT; i++) {
+            const progress = i / LEAF_COUNT; // 0(顶) -> 1(底)
+            // 使用幂函数让顶部更尖，底部更饱满
+            const progressCurve = Math.pow(progress, 0.8); 
+            
+            const y = startY + progressCurve * TREE_HEIGHT;
+            // 理想的圆锥表面半径
+            const idealRadius = progressCurve * TREE_WIDTH; 
+            
+            const angle = i * 1.375 + Math.random()*0.2; // 黄金角分布+随机
+            // 大部分粒子在表面，少部分在内部
+            const distRatio = Math.random() > 0.2 ? 1 : Math.sqrt(Math.random()); 
+            const dist = idealRadius * distRatio;
+
+            particles.push(new Particle(
+                Math.cos(angle) * dist, y, Math.sin(angle) * dist, 'leaf'
+            ));
+        }
+
+        // 2. 构建树干
+        const trunkStartY = startY + TREE_HEIGHT - 20;
+        for (let i = 0; i < TRUNK_COUNT; i++) {
+            const y = trunkStartY + Math.random() * TRUNK_HEIGHT;
+            const angle = Math.random() * Math.PI * 2;
+            const dist = Math.random() * TRUNK_WIDTH;
+            particles.push(new Particle(Math.cos(angle)*dist, y, Math.sin(angle)*dist, 'trunk'));
+        }
+
+        // 3. 构建悬挂的星星 (锚点在树枝上)
+        for (let i = 0; i < HANGING_STAR_COUNT; i++) {
+            const progress = Math.random() * 0.8 + 0.1; //避开极顶和极底
+            const y = startY + progress * TREE_HEIGHT;
+            const radius = progress * TREE_WIDTH;
+            const angle = Math.random() * Math.PI * 2;
+            // 锚点一定要在树的最外层表面
+            particles.push(new HangingStar(Math.cos(angle)*radius, y, Math.sin(angle)*radius));
+        }
+
+        // 4. 挂照片
+        if (loadedImages.length > 0) {
+            for (let i = 0; i < loadedImages.length; i++) {
+                const progress = 0.25 + (i / loadedImages.length) * 0.6;
+                const y = startY + progress * TREE_HEIGHT;
+                const radius = progress * TREE_WIDTH + 15; // 稍微突出
+                const angle = (i / loadedImages.length) * Math.PI * 6; 
+                particles.push(new PhotoOrnament(loadedImages[i], Math.cos(angle)*radius, y, Math.sin(angle)*radius));
+            }
+        }
+
+        for(let i=0; i<250; i++) snow.push(new Snow());
+    }
+
+    // 绘制树顶大星 (保持不变)
+    function drawTopStar(ctx, rotation, time) {
+        const topY = -TREE_HEIGHT / 2 - 35; 
+        const p = new Point3D(0, topY, 0); // 临时点用于投影
+        const proj = p.project(0, topY, 0, rotation);
+        
+        ctx.save();
+        ctx.translate(proj.sx, proj.sy);
+        ctx.rotate(time * 0.0003);
+        ctx.shadowBlur = 40 * proj.scale;
+        ctx.shadowColor = "rgba(255, 223, 0, 0.9)";
+        ctx.beginPath(); const r = 22 * proj.scale; 
+        for(let i=0;i<5;i++){
+            ctx.lineTo(Math.cos((18+i*72)*0.017)*r, -Math.sin((18+i*72)*0.017)*r);
+            ctx.lineTo(Math.cos((54+i*72)*0.017)*(r*0.4), -Math.sin((54+i*72)*0.017)*(r*0.4));
+        }
+        ctx.closePath(); ctx.fillStyle = "#FFFACD"; ctx.fill(); ctx.restore();
+    }
+
+    function animate() {
+        ctx.clearRect(0, 0, width, height);
+        const time = Date.now();
+        targetRotation += autoRotationSpeed;
+        const finalRotation = targetRotation + mouseX * 3;
+
+        snow.forEach(s => { s.update(); s.draw(ctx); });
+
+        // 更新所有3D对象位置 (传入 time 用于物理计算)
+        particles.forEach(p => {
+            if (p instanceof HangingStar) p.update(finalRotation, time);
+            else p.update(finalRotation);
+        });
+
+        // 深度排序
+        particles.sort((a, b) => b.z - a.z);
+
+        // 绘制
+        particles.forEach(p => {
+            if (p instanceof HangingStar) p.draw(ctx, time);
+            else p.draw(ctx);
+        });
+
+        drawTopStar(ctx, finalRotation, time);
+        requestAnimationFrame(animate);
+    }
+
+    preloadImages(imgUrls, () => {
+        const loading = document.getElementById('loading');
+        loading.style.opacity = 0;
+        setTimeout(() => loading.remove(), 800);
+        initScene();
+        animate();
+    });
+
+</script>
+</body>
+</html>
